@@ -3,6 +3,7 @@ import subprocess
 import time
 import sqlite3
 import argparse
+import os
 
 print("[+] Cocoshell API starting")
 api_url = "http://localhost:5000"
@@ -47,32 +48,41 @@ try:
         waiting_for_result = new_command(command)
         if (command == "exit-agent"):
             waiting_for_result = False
-            print("[-] Telling the agent to stop")
-            print("[-] Cleaning any leftovers up")
-            cur.execute("UPDATE commands SET hasBeenRun = 1")
-            con.commit()
-            print("[+] Ready to accept new agents")
+            print("[-] Telling all agents to stop")
+        if ("set-sleep" in command):
+            waiting_for_result = False
+            sleep_array = command.split("set-sleep")
+            sleep_seconds = sleep_array[1].strip()
+            print("[*] Telling the agent to sleep for " + str(sleep_seconds) + " seconds between each request")
 
         while (waiting_for_result):
             if get_last_result()[3] == 1:
                 waiting_for_result = False
                 result = get_last_result()
-                print("[*] Agent send result")
-                print("")
-                print(result[2])
+                if result[2]:
+                    print("[*] Command output:")
+                    print("")
+                    cleaned_result = result[2].replace('%NL%', os.linesep)
+                    print(cleaned_result)
+                else:
+                    print("[-] No output for that command")
+                    print("[-] The command probably failed")
+
                 
 except KeyboardInterrupt:
     print("")
-    print("[+] Ctrl+C detected")
+    print("[-] Ctrl+C detected")
     pass
 except SystemExit:
     print("")
-    print("[+] Exiting")
+    print("[-] Exiting")
     pass
 finally:
     print("")
-    print("[+] Cocoshell stopping")
-    proc.terminate()
+    print("[-] Cocoshell stopping")
+    print("[-] Cleaning up")
+    cur.execute("UPDATE commands SET hasBeenRun = 1")
     con.commit()
+    proc.terminate()
     con.close()
-    print("[+] Cocoshell stopped")
+    print("[-] Cocoshell stopped")

