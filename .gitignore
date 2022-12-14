@@ -1,2 +1,4 @@
 cocoshell.db
 logs/*
+env/
+.vs/
