@@ -9,6 +9,7 @@ For now, the shell is really, really basic. You have a flask API with just one e
 ## Install
 You just need `python3` and `pip` installed.
 ```shell
+sudo apt install python3 python3-pip
 git clone https://github.com/ConstantinTi/cocoshell.git
 cd cocoshell
 pip3 install -r requirements.txt
