@@ -1,4 +1,5 @@
 cocoshell.db
+cocoshell.db-journal
 logs/*
 env/
 .vs/
