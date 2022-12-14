@@ -19,7 +19,6 @@ python3 cocoshell.py
 ## ToDo / Known issues
 * Commands that fail don't show the error output of the command
 * Communcation is completely based on http for now and not encrypted at all
-* There is no possibility to configure anything with arguments
 * You cannot have multiple agents running (which might not be that much of a problem)
 * You cannot see the current working directory of the agent
 * The powershell code is not obfuscated and there is no generator for that either
@@ -28,3 +27,6 @@ python3 cocoshell.py
 * The shell will hang if you execute a command that creates an interactive3 shell session
 * Constrained language mode might be interesting to bypass
 * ExecutionPolicy might be interesting to bypass
+* Argument to hardcode an api endpoint
+* Stage the full payload with the api and only use an iwr
+* shell produces errors when there is no api available
