@@ -4,13 +4,36 @@ import time
 import sqlite3
 import argparse
 import os
+from os.path import exists
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-l", "--lhost", help="the local host ip to listen on (default: 0.0.0.0 for all interfaces)")
+parser.add_argument("-p", "--lport", help="the local port to listen on (default: 5000)")
+args, leftovers = parser.parse_known_args()
+
+if args.lhost is not None:
+    lhost = args.lhost
+else:
+    lhost = '0.0.0.0'
+
+if args.lport is not None:
+    lport = args.lport
+else:
+    lport = '5000'
 
 print("[+] Cocoshell API starting")
-api_url = "http://localhost:5000"
-api_log = open("logs/cocoshell_api.log", "w")
-proc = subprocess.Popen(["python3", "core/api.py"], stdout=api_log)
-print("[*] Cocoshell API started")
 
+api_url = 'http://' + lhost + ':' + lport
+
+try:
+    api_log = open("logs/cocoshell_api.log", "a+")
+except FileNotFoundError:
+    with open("logs/cocoshell_api.log", "a+") as f:
+        f.write('')
+    api_log = open("logs/cocoshell_api.log", "a+")
+
+proc = subprocess.Popen(["python3", "core/api.py"], stdout=api_log)
+print("[*] Cocoshell API started on " + api_url)
 print("[+] Connecting to database")
 time.sleep(2.0)
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
