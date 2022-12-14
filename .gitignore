@@ -4,3 +4,4 @@ logs/*
 env/
 .vs/
 cocoshell.ps1
+core/__pycache__/*
