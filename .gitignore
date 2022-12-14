@@ -2,3 +2,4 @@ cocoshell.db
 logs/*
 env/
 .vs/
+cocoshell.ps1
