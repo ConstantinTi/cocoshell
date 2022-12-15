@@ -1,36 +1,28 @@
 #!/usr/bin/env python
-import subprocess
-import time
-import sqlite3
-import argparse
-import os
-import sys
+import subprocess, time, sqlite3, argparse, os, sys
 from os.path import exists
 from core.payload import generate
+from core.log import Log
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--lhost", help="the ip the agent will connect to")
 parser.add_argument("-p", "--lport", help="the port the agent will connect to (default: 5000)")
 parser.add_argument("-s", "--sleep", help="the amount of seconds the agent waits for the next command (default: 1)")
+parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
 args, leftovers = parser.parse_known_args()
+
+logger = Log(args.verbose)
 
 if args.lhost is not None:
     lhost = args.lhost
 else:
-    print("[-] please use -l/--lhost to specify the ip the agent will connect to")
+    logger.failed("please use -l/--lhost to specify the ip the agent will connect to")
     sys.exit(0)
 
-if args.lport is not None:
-    lport = args.lport
-else:
-    lport = '5000'
+lport = args.lport if args.lport is not None else '5000'
+sleep = args.sleep if args.sleep is not None else 1
 
-if args.sleep is not None:
-    sleep = args.sleep
-else:
-    sleep = 1
-
-print("[+] Cocoshell API starting")
+logger.debug("Cocoshell API starting")
 
 api_url = 'http://0.0.0.0:' + lport
 agent_url = 'http://' + lhost + ':' + lport
@@ -43,16 +35,17 @@ except FileNotFoundError:
     api_log = open("logs/cocoshell_api.log", "a+")
 
 proc = subprocess.Popen(["python3", "core/api.py"], stdout=api_log)
-print("[*] Cocoshell API started on " + api_url)
-print("[+] Connecting to database")
+logger.info("Cocoshell API started on " + api_url)
+logger.debug("Connecting to database")
 time.sleep(2.0)
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
 cur = con.cursor()
-print("[*] Connected")
-generate(agent_url, sleep)
+logger.debug("Connected")
+logger.payload(generate(agent_url, sleep))
 
 waiting_for_result = False
 result = None
+prompt = "cocoshell> "
 
 #############################################################################
 
@@ -60,9 +53,9 @@ def new_command(cmd):
     if get_last_result()[3] == 1:
         cur.execute("INSERT INTO commands (cmd, result, hasBeenRun) VALUES ('" + cmd + "', null, 0)")
         con.commit()
-        print("[*] Command send to agent")
+        logger.debug("Command send to agent")
     else:
-        print("[-] Still waiting for a result")
+        logger.failed("Still waiting for a result")
     return True # Always true as there is either a new command or we are still waiting for a result
 
 def get_last_result():
@@ -70,14 +63,14 @@ def get_last_result():
     return cur.fetchone()
 
 def not_implemented():
-    print("")
-    print("[-] This function is currently unavailable but will probably be implemented in the future")
+    
+    logger.failed("This function is currently unavailable but will probably be implemented in the future")
 
 #############################################################################
 
 try:
     while (True):
-        command = input("cocoshell> ")
+        command = input(prompt)
         if command == "exit":
             raise SystemExit
         if command == "":
@@ -92,12 +85,12 @@ try:
             waiting_for_result = False
         if (command == "exit-agent"):
             waiting_for_result = False
-            print("[-] Telling all agents to stop")
+            logger.failed("Telling all agents to stop")
         if ("set-sleep" in command):
             waiting_for_result = False
             sleep_array = command.split("set-sleep")
             sleep_seconds = sleep_array[1].strip()
-            print("[*] Telling the agent to sleep for " + str(sleep_seconds) + " seconds between each request")
+            logger.info("Telling the agent to sleep for " + str(sleep_seconds) + " seconds between each request")
             time.sleep(int(sleep))
             sleep = sleep_seconds
             cur.execute("UPDATE commands SET hasBeenRun = 1")
@@ -107,28 +100,27 @@ try:
                 waiting_for_result = False
                 result = get_last_result()
                 if result[2]:
-                    print("[*] Command output:")
-                    print("")
+                    logger.debug("Received output from agent")
                     cleaned_result = result[2].replace('%NL%', os.linesep)
-                    print(cleaned_result)
+                    message(cleaned_result)
                 else:
-                    print("[-] No output for that command")
-                    print("[-] The command probably failed")
+                    logger.failed("No output for that command")
+                    logger.failed("The command probably failed")
     
 except KeyboardInterrupt:
     print("")
-    print("[-] Ctrl+C detected")
+    logger.important("Ctrl+C detected")
     pass
 except SystemExit:
-    print("")
-    print("[-] Exiting")
+    
+    logger.debug("Exiting")
     pass
 finally:
-    print("")
-    print("[-] Cocoshell stopping")
-    print("[-] Cleaning up")
+    
+    logger.debug("Cocoshell stopping")
+    logger.debug("Cleaning up")
     cur.execute("UPDATE commands SET hasBeenRun = 1")
     con.commit()
     proc.terminate()
     con.close()
-    print("[-] Cocoshell stopped")
+    logger.important("Cocoshell stopped")

