@@ -4,6 +4,7 @@ import time
 import sqlite3
 import argparse
 import os
+import sys
 from os.path import exists
 from core.payload import generate
 
@@ -17,7 +18,7 @@ if args.lhost is not None:
     lhost = args.lhost
 else:
     print("[-] please use -l/--lhost to specify the ip the agent will connect to")
-    exit()
+    sys.exit(0)
 
 if args.lport is not None:
     lport = args.lport
