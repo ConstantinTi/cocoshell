@@ -30,3 +30,5 @@ python3 cocoshell.py
 * Argument to hardcode an api endpoint
 * Stage the full payload with the api and only use an iwr
 * shell produces errors when there is no api available
+* Pulse checking
+* Rename sleep to frequency
