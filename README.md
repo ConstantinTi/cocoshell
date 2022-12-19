@@ -22,11 +22,9 @@ python3 cocoshell.py
 * You cannot have multiple agents running (which might not be that much of a problem)
 * You cannot see the current working directory of the agent
 * The powershell code is not obfuscated and there is no generator for that either
-* The endpoint of the API is hardcoded to `test`
 * The shell will hang if you execute a command that creates an interactive shell session
 * Constrained language mode might be interesting to bypass
 * ExecutionPolicy might be interesting to bypass
-* Argument to hardcode an api endpoint
 * Stage the full payload with the api and only use an iwr
 * shell produces errors when there is no api available
 * Pulse checking
