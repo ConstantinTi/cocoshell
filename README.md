@@ -33,3 +33,5 @@ python3 cocoshell.py
 * help command within the shell
 * use last commands with arrow up
 * agent timeout
+* better help message
+* acknowledge the connection of an agent
