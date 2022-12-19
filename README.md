@@ -23,7 +23,7 @@ python3 cocoshell.py
 * You cannot see the current working directory of the agent
 * The powershell code is not obfuscated and there is no generator for that either
 * The endpoint of the API is hardcoded to `test`
-* The shell will hang if you execute a command that creates an interactive3 shell session
+* The shell will hang if you execute a command that creates an interactive shell session
 * Constrained language mode might be interesting to bypass
 * ExecutionPolicy might be interesting to bypass
 * Argument to hardcode an api endpoint
@@ -31,3 +31,4 @@ python3 cocoshell.py
 * shell produces errors when there is no api available
 * Pulse checking
 * Rename sleep to frequency
+* the agent is not quitting when the server is stopped
