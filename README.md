@@ -23,7 +23,6 @@ python3 cocoshell.py
 * You cannot see the current working directory of the agent
 * The powershell code is not obfuscated and there is no generator for that either
 * The endpoint of the API is hardcoded to `test`
-* The logging is quite ugly
 * The shell will hang if you execute a command that creates an interactive3 shell session
 * Constrained language mode might be interesting to bypass
 * ExecutionPolicy might be interesting to bypass
