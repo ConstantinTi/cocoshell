@@ -31,3 +31,5 @@ python3 cocoshell.py
 * Flask is running in a different process
 * cd does not fail when you enter a wrong path (errors need to be seen by the server)
 * help command within the shell
+* use last commands with arrow up
+* agent timeout
