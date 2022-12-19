@@ -28,5 +28,5 @@ python3 cocoshell.py
 * Stage the full payload with the api and only use an iwr
 * shell produces errors when there is no api available
 * Pulse checking
-* Rename sleep to frequency
 * the agent is not quitting when the server is stopped
+* You can interact with an agent even if no agent is connected

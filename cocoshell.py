@@ -7,7 +7,7 @@ from core.log import Log
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--lhost", help="the ip the agent will connect to")
 parser.add_argument("-p", "--lport", help="the port the agent will connect to (default: 5000)")
-parser.add_argument("-s", "--sleep", help="the amount of seconds the agent waits for the next command (default: 1)")
+parser.add_argument("-f", "--frequency", help="the amount of seconds the agent waits for the next command (default: 1)")
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
 parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
 args, leftovers = parser.parse_known_args()
@@ -24,7 +24,7 @@ else:
     sys.exit(0)
 
 lport = args.lport if args.lport is not None else '5000'
-sleep = args.sleep if args.sleep is not None else 1
+frequency = args.frequency if args.frequency is not None else 1
 
 logger.debug("Cocoshell API starting")
 
@@ -46,7 +46,7 @@ time.sleep(2.0)
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
 cur = con.cursor()
 logger.debug("Connected")
-logger.payload(generate(agent_url, sleep))
+logger.payload(generate(agent_url, frequency))
 
 waiting_for_result = False
 result = None
@@ -75,7 +75,7 @@ def not_implemented():
 
 try:
     while (True):
-        command = input(prompt)
+        command = input(prompt).strip()
         if command == "exit":
             raise SystemExit
         if command == "":
@@ -91,13 +91,13 @@ try:
         if (command == "exit-agent"):
             waiting_for_result = False
             logger.warning("Telling the agent to quit")
-        if ("set-sleep" in command):
+        if ("set-frequency" in command):
             waiting_for_result = False
-            sleep_array = command.split("set-sleep")
-            sleep_seconds = sleep_array[1].strip()
-            logger.info("Telling the agent to sleep for " + str(sleep_seconds) + " seconds between each request")
-            time.sleep(int(sleep))
-            sleep = sleep_seconds
+            frequency_array = command.split("set-frequency")
+            frequency_seconds = frequency_array[1].strip()
+            logger.info("Telling the agent to sleep for " + str(frequency_seconds) + " seconds between each request")
+            time.sleep(int(frequency))
+            frequency = frequency_seconds
             cur.execute("UPDATE commands SET hasBeenRun = 1")
 
         while (waiting_for_result):

