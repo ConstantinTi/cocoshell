@@ -102,7 +102,7 @@ try:
                 if result[2]:
                     logger.debug("Received output from agent")
                     cleaned_result = result[2].replace('%NL%', os.linesep)
-                    message(cleaned_result)
+                    logger.message(cleaned_result)
                 else:
                     logger.failed("No output for that command")
                     logger.failed("The command probably failed")
