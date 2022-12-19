@@ -17,7 +17,9 @@ cur = con.cursor()
 if not db_exists:
     # Either set up a new database ..
     cur.execute("CREATE TABLE commands (id integer primary key autoincrement, cmd text, result text, hasBeenRun integer)")
+    cur.execute("CREATE TABLE pwd (id integer, pwd text)")
     cur.execute("INSERT INTO commands (cmd, result, hasBeenRun) VALUES (null, null, 1)")
+    cur.execute("INSERT INTO pwd (id, pwd) VALUES (1, 'NULL')")
     con.commit()
 else:
     # .. or make sure, that nothing from the last session is annoying
@@ -36,6 +38,15 @@ def set_result(result):
     con.commit()
     return True
 
+def set_pwd(pwd):
+    cur.execute(f"UPDATE pwd SET pwd = '{pwd}' WHERE id = 1")
+    con.commit()
+    return True
+
+def get_pwd():
+    cur.execute("SELECT pwd FROM pwd LIMIT 1")
+    return cur.fetchone()[0]
+
 #############################################################################
 
 log = logging.getLogger('werkzeug')
@@ -43,17 +54,26 @@ log.setLevel(logging.ERROR)
 api = Flask(__name__)
 #print(route, file=sys.stderr)
 
-@api.route('/' + route, methods=['GET', 'POST'])
-def command_handling():
-    if request.method == 'GET':
+@api.route('/' + route + '/<cmd>', methods=['GET', 'POST'])
+def command_handling(cmd):
+    if cmd == 'get':
         last = is_command_available()
         if last[3] == 1:
             return ''
         else:
             return last[1]
-    if request.method == 'POST':
+    if cmd == 'post':
         set_result(request.data.decode())
         return ''
+    if cmd == 'pwd':
+        #print(request.data.decode(), file=sys.stderr)
+        pwd = request.data.decode()
+        if pwd == "":
+            return get_pwd()
+        if pwd is not None:
+            set_pwd(pwd)
+            return ''
+        
         
 if __name__ == '__main__':
     try:

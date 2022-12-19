@@ -20,7 +20,6 @@ python3 cocoshell.py
 * Commands that fail don't show the error output of the command
 * Communcation is completely based on http for now and not encrypted at all
 * You cannot have multiple agents running (which might not be that much of a problem)
-* You cannot see the current working directory of the agent
 * The powershell code is not obfuscated and there is no generator for that either
 * The shell will hang if you execute a command that creates an interactive shell session
 * Constrained language mode might be interesting to bypass
@@ -29,4 +28,5 @@ python3 cocoshell.py
 * shell produces errors when there is no api available
 * Pulse checking
 * the agent is not quitting when the server is stopped
-* You can interact with an agent even if no agent is connected
+* Flask is running in a different process
+* `cd` fails
