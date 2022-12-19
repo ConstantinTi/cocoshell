@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess, time, sqlite3, argparse, os, sys, random, string, requests
+import subprocess, time, sqlite3, argparse, os, sys, random, string, requests, datetime
 from os.path import exists
 from core.payload import generate
 from core.log import Log
@@ -10,6 +10,7 @@ parser.add_argument("-p", "--lport", help="the port the agent will connect to (d
 parser.add_argument("-f", "--frequency", help="the amount of seconds the agent waits for the next command (default: 1)")
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
 parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
+#parser.add_argument("-t", "--timeout", help="the amount of seconds after which the agent will be declared inactive (default: 60)", type=int)
 args, leftovers = parser.parse_known_args()
 
 letters = string.ascii_lowercase
@@ -25,6 +26,7 @@ else:
 
 lport = args.lport if args.lport is not None else '5000'
 frequency = args.frequency if args.frequency is not None else 1
+timeout = 60 + frequency
 
 logger.debug("Cocoshell API starting")
 
@@ -74,6 +76,14 @@ def not_implemented():
 def get_heartbeat():
     cur.execute("SELECT beat FROM pulse ORDER BY id DESC LIMIT 1")
     return cur.fetchone()[0]
+    
+def is_active():
+    cur.execute("SELECT beat FROM pulse ORDER BY id DESC LIMIT 1")
+    timestamp_str = cur.fetchone()[0]
+    timestamp = datetime.datetime.strptime(timestamp_str, "%H:%M:%S %m/%d/%Y")
+    difference = datetime.datetime.now() - timestamp
+    active = True if difference.total_seconds() > timeout else False
+    return active
 
 #############################################################################
 
@@ -85,6 +95,8 @@ try:
         if pwd == "NULL":
             time.sleep(1.0)
             continue
+        if is_active():
+            logger.warn("the agent seems to have timed out")
 
         command = input(f"*{prompt}* {pwd}> ").strip()
         if command == "exit":

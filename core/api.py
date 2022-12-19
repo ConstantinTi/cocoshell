@@ -54,6 +54,7 @@ def heartbeat():
     timestamp = now.strftime("%H:%M:%S %m/%d/%Y")
     tmp_cur = con.cursor()
     tmp_cur.execute("INSERT INTO pulse (beat) VALUES ('" + timestamp + "')")
+    tmp_cur.close()
     con.commit()
     return timestamp
 

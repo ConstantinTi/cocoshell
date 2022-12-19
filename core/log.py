@@ -36,7 +36,7 @@ class Log:
 
     def debug(self, msg):
         if self.verbose:
-            print(f"[{self.DEBUG}] {msg}")
+            print(f"[{self.DEBUG}]", msg)
 
     def payload(self, msg):
         print(f"{self.GREEN}{msg}{self.END}")
