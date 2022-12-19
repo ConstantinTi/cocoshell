@@ -35,3 +35,4 @@ python3 cocoshell.py
 * agent timeout
 * better help message
 * acknowledge the connection of an agent
+* timeout for commands
