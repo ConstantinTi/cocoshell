@@ -88,6 +88,9 @@ try:
             raise SystemExit
         if command == "":
             continue
+        if command in ["cd ..", "cd .", "cd"]:
+            logger.failed("you cannot use dots in the command")
+            continue
 
         waiting_for_result = new_command(command)
         if (command == "help"):
@@ -115,7 +118,8 @@ try:
                 if result[2]:
                     logger.debug("Received output from agent")
                     cleaned_result = result[2].replace('%NL%', os.linesep)
-                    logger.message(cleaned_result)
+                    if cleaned_result != "True":
+                        logger.message(cleaned_result)
                 else:
                     logger.failed("No output for that command")
                     logger.failed("The command probably failed")

