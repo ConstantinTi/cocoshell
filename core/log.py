@@ -11,7 +11,7 @@ class Log:
     INFO = f'{MAIN}Info{END}'
     WARN = f'{ORANGE}Warning{END}'
     IMPORTANT = WARN = f'{ORANGE}Important{END}'
-    FAILED = f'{RED}Fail{END}'
+    FAILED = f'{RED}Failed{END}'
     DEBUG = f'{ORANGE}Debug{END}'
 
     verbose = False
