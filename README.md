@@ -24,10 +24,7 @@ python3 cocoshell.py
 * The shell will hang if you execute a command that creates an interactive shell session
 * Constrained language mode might be interesting to bypass
 * ExecutionPolicy might be interesting to bypass
-* Stage the full payload with the api and only use an iwr
 * shell produces errors when there is no api available
-* Pulse checking
-* the agent is not quitting when the server is stopped
 * Flask is running in a different process
 * cd does not fail when you enter a wrong path (errors need to be seen by the server)
 * use last commands with arrow up

