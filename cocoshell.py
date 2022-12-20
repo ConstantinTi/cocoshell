@@ -61,6 +61,7 @@ waiting_for_result = False
 result = None
 prompt = "cocoshell"
 pwd = ''
+agent_has_connected = False
 
 #############################################################################
 
@@ -122,6 +123,9 @@ try:
             continue
         if is_active():
             logger.warn("the agent seems to have timed out")
+        if not agent_has_connected:
+            logger.info("an agent has connected")
+            agent_has_connected = True
 
         command = input(f"*{prompt}* {pwd}> ").strip()
         command_start_time = datetime.datetime.now()
