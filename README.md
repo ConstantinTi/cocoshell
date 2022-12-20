@@ -30,7 +30,6 @@ python3 cocoshell.py
 * the agent is not quitting when the server is stopped
 * Flask is running in a different process
 * cd does not fail when you enter a wrong path (errors need to be seen by the server)
-* help command within the shell
 * use last commands with arrow up
 * better help message (create usage examples in the epilog when there is more functionality)
 * clean up code - its really messy
