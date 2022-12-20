@@ -160,7 +160,7 @@ try:
             if command_has_timed_out(command_start_time):
                 reset_agent()
                 logger.failed("the command has timed out")
-                logger.info("use the command 'pulse' to check when the agent last checked in")
+                logger.info("use 'pulse' to check when the agent last checked in")
                 break
             if get_last_result()[3] == 1:
                 waiting_for_result = False
