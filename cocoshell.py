@@ -4,7 +4,13 @@ from os.path import exists
 from core.payload import generate
 from core.log import Log
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(
+    prog='Cocoshell',
+    description='A reverse shell generator for windows and listener that uses http to establish a connection.',
+    epilog='''
+    tbd
+    '''
+)
 parser.add_argument("-l", "--lhost", help="the ip the agent will connect to")
 parser.add_argument("-p", "--lport", help="the port the agent will connect to (default: 5000)")
 parser.add_argument("-f", "--frequency", help="the amount of seconds the agent waits for the next command (default: 1)")

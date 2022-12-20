@@ -32,6 +32,6 @@ python3 cocoshell.py
 * cd does not fail when you enter a wrong path (errors need to be seen by the server)
 * help command within the shell
 * use last commands with arrow up
-* better help message
+* better help message (create usage examples in the epilog when there is more functionality)
 * acknowledge the connection of an agent
 * timeout for commands
