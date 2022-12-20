@@ -19,9 +19,7 @@ python3 cocoshell.py
 ## ToDo / Known issues
 * Commands that fail don't show the error output of the command
 * Communcation is completely based on http for now and not encrypted at all
-* You cannot have multiple agents running (which might not be that much of a problem)
 * The powershell code is not obfuscated and there is no generator for that either
-* The shell will hang if you execute a command that creates an interactive shell session
 * Constrained language mode might be interesting to bypass
 * ExecutionPolicy might be interesting to bypass
 * shell produces errors when there is no api available

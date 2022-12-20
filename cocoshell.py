@@ -152,6 +152,7 @@ try:
             logger.warn("the agent seems to have timed out")
         if not agent_has_connected:
             logger.info("an agent has connected")
+            logger.important("DO NOT start anything interactive as it will break the shell!")
             agent_has_connected = True
 
         command = input(f"*{prompt}* {pwd}> ").strip()
