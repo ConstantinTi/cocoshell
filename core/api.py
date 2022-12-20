@@ -61,6 +61,11 @@ def heartbeat():
     con.commit()
     return timestamp
 
+def reset_agent():
+    cur.execute("UPDATE commands SET hasBeenRun = 1")
+    cur.execute("UPDATE pwd SET pwd = 'NULL'")
+    con.commit()
+
 #############################################################################
 
 log = logging.getLogger('werkzeug')
@@ -75,6 +80,8 @@ def command_handling(cmd):
         if last[3] == 1:
             return ''
         else:
+            if last[1] == "exit-agent":
+                reset_agent()
             return last[1]
     if cmd == 'post':
         set_result(request.data.decode())

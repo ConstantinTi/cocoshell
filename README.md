@@ -33,4 +33,4 @@ python3 cocoshell.py
 * help command within the shell
 * use last commands with arrow up
 * better help message (create usage examples in the epilog when there is more functionality)
-* clean up code
+* clean up code - its really messy

