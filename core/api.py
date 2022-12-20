@@ -46,8 +46,11 @@ def set_pwd(pwd):
     return True
 
 def get_pwd():
-    cur.execute("SELECT pwd FROM pwd LIMIT 1")
-    return cur.fetchone()[0]
+    tmp_cur = con.cursor()
+    tmp_cur.execute("SELECT pwd FROM pwd LIMIT 1")
+    result = tmp_cur.fetchone()[0]
+    tmp_cur.close()
+    return result
 
 def heartbeat():
     now = datetime.datetime.now()

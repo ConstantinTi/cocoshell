@@ -34,4 +34,3 @@ python3 cocoshell.py
 * use last commands with arrow up
 * better help message (create usage examples in the epilog when there is more functionality)
 * acknowledge the connection of an agent
-* timeout for commands
