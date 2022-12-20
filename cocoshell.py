@@ -150,6 +150,7 @@ try:
             continue
         if is_active():
             logger.warn("the agent seems to have timed out")
+            logger.info("use 'pulse' to check when the agent last checked in")
         if not agent_has_connected:
             logger.info("an agent has connected")
             logger.important("DO NOT start anything interactive as it will break the shell!")
@@ -195,7 +196,7 @@ try:
         while (waiting_for_result):
             if command_has_timed_out(command_start_time):
                 reset_agent()
-                logger.failed("the command has timed out")
+                logger.warn("the command has timed out")
                 logger.info("use 'pulse' to check when the agent last checked in")
                 break
             if get_last_result()[3] == 1:
