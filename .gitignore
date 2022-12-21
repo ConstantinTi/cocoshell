@@ -3,6 +3,8 @@ cocoshell.db-journal
 logs/*
 *.old.py
 env/
+old/
+old/*
 .vs/
-cocoshell.ps1
+*.ps1
 core/__pycache__/*
