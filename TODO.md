@@ -7,3 +7,4 @@
 * use last commands with arrow up
 * better help message (create usage examples in the epilog when there is more functionality)
 * upload / download
+* proper README
