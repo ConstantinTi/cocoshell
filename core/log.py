@@ -47,6 +47,8 @@ class Log:
         print("")
         help = [
             ['help', 'print this message'],
+            ['payload', 'print the powershell payload to console'],
+            ['payload_full', 'print the full powershell payload to console (it is a lot)'],
             ['agents', 'show all connected agents'],
             ['interact <agent uuid>', 'interact with a agent'],
             ['remove <agent uuid>', 'remove an agent'],

