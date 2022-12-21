@@ -1,6 +1,7 @@
 cocoshell.db
 cocoshell.db-journal
 logs/*
+*.old.py
 env/
 .vs/
 cocoshell.ps1
