@@ -1,3 +1,5 @@
+from tabulate import tabulate
+
 class Log:
     MAIN = '\033[38;5;50m'
     PLOAD = '\033[38;5;119m'
@@ -16,11 +18,11 @@ class Log:
 
     verbose = False
 
-    def __init__(self, verbose):
+    def __init__(self, verbose=False):
         self.verbose = verbose
 
     def message(self, msg):
-        print(f"{msg}")
+        print(msg)
 
     def info(self, msg):
         print(f"[{self.INFO}] {msg}")
@@ -41,15 +43,28 @@ class Log:
     def payload(self, msg):
         print(f"{self.GREEN}{msg}{self.END}")
 
-    def print_help(self):
-        print(
-            '''
-            \r  Command         Description
-            \r  help            print this message
-            \r  raw             regenerate the powershell payload and print it to console
-            \r  pulse           check when the agent last checked in
-            \r  set-frequency   set the time between requests from the agent
-            \r  exit-agent      stop the connected agent
-            \r  exit            exit this program
-            '''
-        )
+    def print_general_help(self):
+        print("")
+        help = [
+            ['help', 'print this message'],
+            ['agents', 'show all connected agents'],
+            ['interact <agent uuid>', 'interact with a agent'],
+            ['remove <agent uuid>', 'remove an agent'],
+            ['exit', 'exit this program']
+        ]
+        self.message(tabulate(help, headers=['Command', 'Description']))
+        print("")
+
+    def print_agent_help(self):
+        print("")
+        help = [
+            ['help', 'print this message'],
+            ['back', 'stop interacting with the current agent']
+        ]
+        self.message(tabulate(help, headers=['Command', 'Description']))
+        print("")
+
+    def print_agents(self, agents):
+        print("")
+        self.message(tabulate(agents, headers=['ID', 'Hostname', 'Current working directory']))
+        print("")
