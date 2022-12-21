@@ -3,6 +3,7 @@ import subprocess, time, sqlite3, argparse, os, sys, random, string, requests, d
 from os.path import exists
 from core.payload import *
 from core.log import Log
+from core.db import Db
 
 parser = argparse.ArgumentParser(
     prog='Cocoshell',
@@ -18,6 +19,7 @@ parser.add_argument("-r", "--route", help="the api endpoint the agent will conne
 parser.add_argument("-v", "--verbose", help="debug messages will be printed to the console", action="store_true")
 parser.add_argument("-t", "--timeout", help="the amount of seconds after which a command is cancelled (default: 30)", type=int)
 parser.add_argument("--unstaged", help="this will print the full payload instead of the staged one", action="store_true")
+parser.add_argument("-db", "--database", help="the sqlite3 database to use")
 args, leftovers = parser.parse_known_args()
 
 letters = string.ascii_lowercase
@@ -35,6 +37,7 @@ lport = args.lport if args.lport is not None else '5000'
 frequency = args.frequency if args.frequency is not None else 1
 timeout_cmd = args.timeout + frequency if args.timeout is not None else 30 + frequency
 timeout_agent = 60 + frequency
+dbname = args.database if args.database is not None else "cocoshell.db"
 
 logger.debug("Cocoshell API starting")
 
@@ -53,10 +56,7 @@ logger.info(f"Cocoshell API started on {api_url}")
 logger.info(f"Agent will connect to {agent_url}")
 logger.debug("Connecting to database")
 time.sleep(2.0)
-con = sqlite3.connect("cocoshell.db", check_same_thread=False)
-cur = con.cursor()
-logger.debug("Connected")
-logger.debug(f"the payload will be printed unstaged: {args.unstaged}")
+db = Db(dbname, args.verbose)
 
 if args.unstaged:
     logger.payload(generate_payload(agent_url, frequency))
@@ -72,66 +72,10 @@ agent_is_quitting = False
 
 #############################################################################
 
-def print_help():
-    print(
-        '''
-        \r  Command         Description
-        \r  help            print this message
-        \r  raw             regenerate the powershell payload and print it to console
-        \r  pulse           check when the agent last checked in
-        \r  set-frequency   set the time between requests from the agent
-        \r  exit-agent      stop the connected agent
-        \r  exit            exit this program
-        '''
-    )
-
-def new_command(cmd):
-    if get_last_result()[3] == 1:
-        cur.execute("INSERT INTO commands (cmd, result, hasBeenRun) VALUES ('" + cmd + "', null, 0)")
-        con.commit()
-        logger.debug("Command send to agent")
-    else:
-        logger.failed("Still waiting for a result")
-    return True # Always true as there is either a new command or we are still waiting for a result
-
-def get_last_result():
-    cur.execute("SELECT * FROM commands ORDER BY id DESC LIMIT 1")
-    return cur.fetchone()
-
-def not_implemented():
-    logger.failed("This function is currently unavailable but will probably be implemented in the future")
-
-def get_heartbeat():
-    cur.execute("SELECT beat FROM pulse ORDER BY id DESC LIMIT 1")
-    return cur.fetchone()[0]
-    
-def is_active():
-    cur.execute("SELECT beat FROM pulse ORDER BY id DESC LIMIT 1")
-    timestamp_str = cur.fetchone()[0]
-    timestamp = datetime.datetime.strptime(timestamp_str, "%H:%M:%S %m/%d/%Y")
-    difference = datetime.datetime.now() - timestamp
-    active = True if difference.total_seconds() > timeout_agent else False
-    return active
-
 def command_has_timed_out(start):
     difference = datetime.datetime.now() - start
     timed_out = True if difference.total_seconds() > timeout_cmd else False
     return timed_out
-
-def reset_agent():
-    cur.execute("UPDATE commands SET hasBeenRun = 1")
-    cur.execute("UPDATE pwd SET pwd = 'NULL'")
-    con.commit()
-    return ['NULL', False]
-
-def cleanup():
-    logger.debug("Cocoshell stopping")
-    logger.debug("Cleaning up")
-    reset_agent()
-    con.commit()
-    proc.terminate()
-    con.close()
-    logger.important("Cocoshell stopped")
 
 #############################################################################
 
@@ -148,7 +92,7 @@ try:
         if pwd == "NULL":
             time.sleep(1.0)
             continue
-        if is_active():
+        if db.is_active(timeout_agent):
             logger.warn("the agent seems to have timed out")
             logger.info("use 'pulse' to check when the agent last checked in")
         if not agent_has_connected:
@@ -162,7 +106,7 @@ try:
         if command == "exit":
             raise SystemExit
         if command == "help":
-            print_help()
+            logger.print_help()
             continue
         if command == "":
             continue
@@ -170,13 +114,10 @@ try:
             logger.failed("you cannot use dots in the command")
             continue
         if command in ["pulse"]:
-            logger.info(f"agent last checked in at {get_heartbeat()}")
+            logger.info(f"agent last checked in at {db.get_heartbeat()}")
             continue
 
-        waiting_for_result = new_command(command)
-        if (command == "help"):
-            not_implemented()
-            waiting_for_result = False
+        waiting_for_result = db.new_command(command)
         if (command == "raw"):
             generate_payload(agent_url, frequency)
             waiting_for_result = False
@@ -191,18 +132,18 @@ try:
             logger.info("telling the agent to sleep for " + str(frequency_seconds) + " seconds between each request")
             time.sleep(int(frequency))
             frequency = frequency_seconds
-            cur.execute("UPDATE commands SET hasBeenRun = 1")
+            db.set_result("NULL")
 
         while (waiting_for_result):
             if command_has_timed_out(command_start_time):
-                reset_agent()
+                db.reset_agent()
                 logger.warn("the command has timed out")
                 logger.info("use 'pulse' to check when the agent last checked in")
                 break
-            if get_last_result()[3] == 1:
+            if db.get_last_result()[3] == 1:
                 waiting_for_result = False
                 command_start_time = None
-                result = get_last_result()
+                result = db.get_last_result()
                 if result[2]:
                     logger.debug("received output from agent")
                     cleaned_result = result[2].replace('%NL%', os.linesep)
@@ -223,4 +164,4 @@ except SystemExit:
     logger.debug("Exiting")
     pass
 finally:
-    cleanup()
+    proc.terminate()

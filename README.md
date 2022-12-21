@@ -28,3 +28,4 @@ python3 cocoshell.py
 * use last commands with arrow up
 * better help message (create usage examples in the epilog when there is more functionality)
 * clean up code - its really messy
+* upload / download

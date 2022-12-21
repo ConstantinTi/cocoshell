@@ -40,3 +40,16 @@ class Log:
 
     def payload(self, msg):
         print(f"{self.GREEN}{msg}{self.END}")
+
+    def print_help(self):
+        print(
+            '''
+            \r  Command         Description
+            \r  help            print this message
+            \r  raw             regenerate the powershell payload and print it to console
+            \r  pulse           check when the agent last checked in
+            \r  set-frequency   set the time between requests from the agent
+            \r  exit-agent      stop the connected agent
+            \r  exit            exit this program
+            '''
+        )
